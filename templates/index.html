@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Writer AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% include 'components/header.html' %}
+
+    <!-- Main Application Container -->
+    <div class="app-layout">
+        {% include 'components/sidebar.html' %}
+
+        <!-- Main Workspace Area -->
+        <main class="app-workspace">
+            
+            {% include 'components/dashboard.html' %}
+
+            {% include 'components/history.html' %}
+
+            {% include 'components/saved.html' %}
+
+            {% include 'components/templates.html' %}
+
+            {% include 'components/rag.html' %}
+
+
+            {% include 'components/analytics.html' %}
+
+            {% include 'components/settings.html' %}
+
+        </main>
+    </div>
+
+
+    <!-- Notification Toast Element -->
+    <div id="toast-notification" class="toast hidden"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

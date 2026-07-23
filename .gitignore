@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite3
+uploads/
+*.mp4
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.log
+.env
+.venv/
+venv/
+env/

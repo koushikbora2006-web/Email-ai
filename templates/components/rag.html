@@ -1,0 +1,28 @@
+<!-- VIEW 5: KNOWLEDGE BASE (RAG) TAB -->
+<section id="tab-rag" class="tab-content">
+    <div class="tab-page-header">
+        <h2>Knowledge Base (RAG Integration)</h2>
+        <p class="tab-subtitle">Upload documents (PDF, TXT, DOCX) to automatically ground AI email generation in your organization's context.</p>
+    </div>
+
+    <div class="upload-dropzone" id="rag-dropzone">
+        <span class="upload-icon">📁</span>
+        <h3>Drag & Drop Documents Here</h3>
+        <p>Supported formats: PDF, TXT, DOCX, Images</p>
+        <input type="file" id="rag-file-input" class="hidden" multiple accept=".pdf,.txt,.docx,.png,.jpg">
+        <button class="btn btn-secondary" onclick="document.getElementById('rag-file-input').click()">Browse Files</button>
+    </div>
+
+    <div class="rag-options-row">
+        <label class="toggle-switch">
+            <input type="checkbox" id="enable-rag-toggle" checked>
+            <span class="slider"></span>
+            <span class="toggle-label">Enable RAG Context in Email Generator</span>
+        </label>
+    </div>
+
+    <h3>Uploaded Knowledge Documents</h3>
+    <div id="rag-docs-list" class="docs-table-wrapper">
+        <p class="empty-state">No documents indexed in knowledge base.</p>
+    </div>
+</section>

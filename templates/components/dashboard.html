@@ -1,0 +1,161 @@
+<!-- VIEW 1: DASHBOARD TAB (Matches Screenshot UI Pixel-For-Pixel) -->
+<section id="tab-dashboard" class="tab-content active">
+    <div class="workspace-grid">
+        
+        <!-- Center Prompting Panel -->
+        <div class="center-panel">
+            <div class="center-header">
+                <div class="title-wrap">
+                    <h1>Email Writer AI Assistant <span class="sparkle-gold">✨</span></h1>
+                    <p class="subtitle">Generate professional emails from any input with OCR, RAG & Gemini / Llama AI</p>
+                </div>
+                <button class="btn-clear-chat" id="btn-clear-chat">
+                    <span class="clear-icon">📝</span> Clear Chat
+                </button>
+            </div>
+
+            <!-- Prompt Input Area -->
+            <div class="prompt-card">
+                <textarea id="prompt-input" rows="4" placeholder="create me a leave letter for 3 days"></textarea>
+                
+                <div class="prompt-card-actions">
+                    <label for="file-attach-input" class="btn-circle-add" title="Attach image, video or document">
+                        <span>+</span>
+                    </label>
+                    <input type="file" id="file-attach-input" class="hidden" accept=".png,.jpg,.jpeg,.bmp,.gif,.webp,.pdf,.txt,.docx,.mp4,.mov,.avi,.mkv,.webm">
+                    
+                    <button class="btn-submit-arrow" id="btn-generate-email" title="Generate Email">
+                        ➔
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active File / OCR Attachment Preview Pill -->
+            <div id="attachment-preview-bar" class="attachment-preview-bar hidden">
+                <div id="attachment-thumbnail-container" class="attachment-thumbnail-container"></div>
+                <div class="attachment-info-wrap">
+                    <span id="attachment-file-name">file.pdf</span>
+                    <span id="ocr-badge-tag" class="tag-badge">OCR Text Extracted</span>
+                </div>
+                <button id="btn-remove-attachment" class="btn-close-attachment">×</button>
+            </div>
+
+            <!-- Format Selection Pills -->
+            <div class="format-pills-row">
+                <button class="pill-btn active" data-format="email" id="pill-email">✉ Email</button>
+                <button class="pill-btn" data-format="pdf" id="pill-pdf">📄 PDF</button>
+                <button class="pill-btn" data-format="image" id="pill-image">🖼 Image</button>
+                <button class="pill-btn" data-format="video" id="pill-video">🎥 Video</button>
+                <button class="pill-btn" data-format="docx" id="pill-docx">📝 DOCX</button>
+                <div class="more-dropdown-wrap">
+                    <button class="pill-btn" data-format="more" id="pill-more">... More ▾</button>
+                    <div class="more-dropdown-menu hidden" id="more-dropdown-menu">
+                        <button class="more-menu-item" id="menu-opt-docx">📝 DOCX Document</button>
+                        <button class="more-menu-item" id="menu-opt-txt">📄 Plain Text (.txt)</button>
+                        <button class="more-menu-item" id="menu-opt-csv">📊 CSV Spreadsheet</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden Format-Specific File Attachment Inputs -->
+            <input type="file" id="pdf-attach-input" class="hidden" accept=".pdf">
+            <input type="file" id="image-attach-input" class="hidden" accept=".png,.jpg,.jpeg,.bmp,.webp">
+            <input type="file" id="video-attach-input" class="hidden" accept=".mp4,.mov,.avi,.mkv,.webm">
+            <input type="file" id="docx-attach-input" class="hidden" accept=".docx,.doc">
+            <input type="file" id="txt-attach-input" class="hidden" accept=".txt,.csv,.md">
+
+            <!-- Quick Action Buttons Below Filters -->
+            <div class="action-buttons-row">
+                <button class="action-card-btn" id="btn-action-save">
+                    <span class="action-icon">🔖</span> Save
+                </button>
+                <button class="action-card-btn" id="btn-action-gmail">
+                    <span class="action-icon google-g">G</span> Gmail Draft
+                </button>
+                <button class="action-card-btn" id="btn-action-pdf">
+                    <span class="action-icon pdf-icon">📄</span> PDF
+                </button>
+                <button class="action-card-btn" id="btn-action-docx">
+                    <span class="action-icon docx-icon">📝</span> DOCX
+                </button>
+            </div>
+
+            <!-- Try an Example Prompt Section -->
+            <div class="example-prompts-section">
+                <p class="example-label">Try an example prompt ⤵</p>
+                <div class="example-pills-row">
+                    <button class="example-pill-btn" data-prompt="Write a formal Job application email for Senior Software Developer role highlighting my Python and AI skills.">Job application email</button>
+                    <button class="example-pill-btn" data-prompt="Create a formal leave request email to my manager asking for 3 days leave due to medical reasons.">3-Day Sick Leave</button>
+                    <button class="example-pill-btn" data-prompt="Create a polite follow-up email regarding the status of project review and pending deliverables.">Follow-up email</button>
+                    <button class="example-pill-btn" data-prompt="Write a compelling cold sales pitch email introducing our AI software solution to a target client.">Cold Sales Pitch</button>
+                    <button class="example-pill-btn" data-prompt="Draft a polite two-week resignation notice email to my manager and HR department.">Resignation Notice</button>
+                    <button class="example-pill-btn" data-prompt="Write a firm yet polite complaint email about delayed internet service installation.">Complaint email</button>
+                    <button class="example-pill-btn" data-prompt="Draft a request email to my manager for approving budget allocation for new team tools.">Request email</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Generated Email Card & Controls -->
+        <div class="right-panel">
+            <div class="output-card">
+                <div class="output-card-header">
+                    <h3>Generated Email</h3>
+                    <span class="status-ready-tag" id="status-tag">Ready</span>
+                </div>
+
+                <div class="output-card-body">
+                    <div class="subject-line-box">
+                        <strong>Subject:</strong> <span id="output-subject">(Generated Email Subject)</span>
+                    </div>
+                    <div class="email-body-content" id="output-body">
+                        Your generated email draft will appear here when you enter a prompt and click send.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Tone & Length Selector Controls -->
+            <div class="output-controls-panel">
+                <div class="select-group-row">
+                    <div class="select-field">
+                        <label for="tone-select">Tone</label>
+                        <select id="tone-select">
+                            <option value="Formal" selected>Formal</option>
+                            <option value="Casual">Casual</option>
+                            <option value="Professional">Professional</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="Friendly">Friendly</option>
+                            <option value="Persuasive">Persuasive</option>
+                            <option value="Empathetic / Polite">Empathetic / Polite</option>
+                            <option value="Apologetic">Apologetic</option>
+                            <option value="Authoritative / Executive">Authoritative / Executive</option>
+                            <option value="Assertive / Firm">Assertive / Firm</option>
+                            <option value="Enthusiastic">Enthusiastic</option>
+                            <option value="Diplomatic">Diplomatic</option>
+                        </select>
+                    </div>
+
+                    <div class="select-field">
+                        <label for="length-select">Length</label>
+                        <select id="length-select">
+                            <option value="Short">Short</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="Long">Long</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bottom-action-buttons">
+                    <button class="btn-outline-regenerate" id="btn-regenerate">
+                        <span class="icon">🔄</span> Regenerate
+                    </button>
+                    <button class="btn-coral-copy" id="btn-copy-email">
+                        <span class="icon">📋</span> Copy Email
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>

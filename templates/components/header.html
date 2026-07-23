@@ -1,0 +1,17 @@
+<!-- Top Header Bar -->
+<header class="app-header">
+    <div class="header-left">
+        <div class="brand-title">
+            <span class="brand-icon">✨</span>
+            <span class="brand-text">Email Writer AI</span>
+        </div>
+    </div>
+    <div class="header-right">
+        <a href="#support" class="nav-link-item" id="support-link">Support</a>
+        <div class="user-profile-widget" id="header-profile-widget">
+            <img id="header-profile-pic" class="header-profile-pic" src="/api/user/profile-pic" alt="Profile">
+            <span class="user-email-display" id="user-email-tag">{{ user_email }}</span>
+        </div>
+        <a href="/api/auth/logout" class="btn-signout">Sign out</a>
+    </div>
+</header>

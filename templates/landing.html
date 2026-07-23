@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Email Writer Assistant | Get Started</title>
+    <meta name="description" content="Generate professional emails from any input with OCR, RAG & Llama 3 AI.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="landing-body">
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="bi bi-envelope-paper-fill"></i>
+                </div>
+                <span class="logo-text">EmailAI</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How it Works</a>
+                <div class="nav-actions">
+                    <a href="{{ url_for('login_page') }}" class="btn btn-primary">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="hero">
+        <div class="hero-bg-gradient"></div>
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Write Professional Emails <br>
+                    <span class="text-gradient">In Seconds, Not Minutes</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Upload documents, audio, or describe what you need. Our local AI agent generates perfectly crafted
+                    emails with contextual awareness and professional tone.
+                </p>
+                <div class="hero-cta">
+                    <a href="{{ url_for('login_page') }}" class="btn btn-primary btn-lg">
+                        Get Started <i class="bi bi-arrow-right"></i>
+                    </a>
+                    <a href="#features" class="btn btn-outline btn-lg">
+                        Explore Features
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- FEATURES SECTION -->
+    <section id="features" class="features">
+        <div class="section-container">
+            <div class="section-header text-center">
+                <h2 class="section-title">Everything you need to master your inbox</h2>
+                <p class="section-subtitle">A complete suite of AI-powered tools designed to save you hours every week.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <div class="feature-card">
+                    <div class="feature-icon bg-orange"><i class="bi bi-magic"></i></div>
+                    <h3>Smart Generation</h3>
+                    <p>Just tell the AI what you need to say. It understands context, tone, and professional etiquette
+                        automatically.</p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="feature-card">
+                    <div class="feature-icon bg-blue"><i class="bi bi-file-earmark-arrow-up-fill"></i></div>
+                    <h3>Multi-File Context</h3>
+                    <p>Upload PDFs, Word docs, Images, or Audio files. The AI reads them and drafts emails based on your
+                        documents.</p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="feature-card">
+                    <div class="feature-icon bg-purple"><i class="bi bi-database-fill"></i></div>
+                    <h3>Knowledge Base</h3>
+                    <p>Build a persistent RAG knowledge base. The AI remembers your company's information for consistent
+                        emails.</p>
+                </div>
+                <!-- Feature 4 -->
+                <div class="feature-card">
+                    <div class="feature-icon bg-green"><i class="bi bi-sliders"></i></div>
+                    <h3>Customizable Tone</h3>
+                    <p>From formal corporate to casual friendly, adjust the tone and length of any email with a single
+                        click.</p>
+                </div>
+                <!-- Feature 5 -->
+                <div class="feature-card">
+                    <div class="feature-icon bg-red"><i class="bi bi-google"></i></div>
+                    <h3>Gmail Integration</h3>
+                    <p>Connect your account to securely save generated emails directly to your Gmail drafts folder.</p>
+                </div>
+                <!-- Feature 6 -->
+                <div class="feature-card">
+                    <div class="feature-icon bg-yellow"><i class="bi bi-shield-check"></i></div>
+                    <h3>Offline Privacy</h3>
+                    <p>Powered by local Ollama models. Your sensitive data and documents never leave your machine.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS SECTION -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="section-container">
+            <div class="section-header text-center">
+                <h2 class="section-title">How it works</h2>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Upload Context</h3>
+                    <p>Drop your documents, meeting notes, or audio recordings into the chat.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Prompt the AI</h3>
+                    <p>Simply ask the assistant to "write a follow-up email based on these notes."</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Review & Send</h3>
+                    <p>Get a perfectly formatted email. Tweak the tone, then copy or export to Gmail.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA SECTION -->
+    <section class="bottom-cta">
+        <div class="cta-container">
+            <h2>Ready to upgrade your email game?</h2>
+            <p>Join professionals saving hours every week with EmailAI.</p>
+            <a href="{{ url_for('login_page') }}" class="btn btn-primary btn-lg">Get Started</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="bi bi-envelope-paper-fill"></i>
+                    </div>
+                    <span class="logo-text">EmailAI</span>
+                </div>
+                <p>The ultimate offline AI writing assistant for professionals.</p>
+            </div>
+            <div class="footer-links">
+                <div class="link-column">
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Security</a>
+                    <a href="#">Download</a>
+                </div>
+                <div class="link-column">
+                    <h4>Resources</h4>
+                    <a href="#">Documentation</a>
+                    <a href="#">Help Center</a>
+                    <a href="#">API</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Email Writer AI. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Email Writer AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <a href="/" style="text-decoration: none; color: inherit; display: inline-block;">
+                    <div class="brand-logo">
+                        <span class="sparkle">✨</span>
+                        <h2>Email Writer AI</h2>
+                    </div>
+                </a>
+                <p class="login-subtitle">Sign in to your account with OTP</p>
+            </div>
+
+            <!-- Step 1: Request OTP -->
+            <div id="step-email" class="auth-step">
+                <div class="form-group">
+                    <label for="email-input">Email Address</label>
+                    <input type="email" id="email-input" placeholder="e.g. username@example.com" value="username@example.com">
+                </div>
+
+                <button id="send-otp-btn" class="btn btn-primary btn-block">Send OTP Code ➔</button>
+
+                <!-- Quick SMTP Setup Toggle for Real Inbox Delivery -->
+                <div class="smtp-quick-toggle" style="margin-top: 16px; text-align: center;">
+                    <a href="#" id="toggle-smtp-box" style="font-size: 0.82rem; color: var(--primary-coral); text-decoration: none; font-weight: 600;">⚙️ Configure Sender Gmail for Live Inbox Delivery</a>
+                </div>
+
+                <div id="smtp-setup-box" class="smtp-setup-box hidden" style="margin-top: 14px; background: #F8FAFC; border: 1px solid var(--border-color); padding: 14px; border-radius: var(--radius-md); text-align: left;">
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px; font-weight: 500;">
+                        To deliver 4-digit OTPs directly to recipient Gmail inboxes, enter your Sender Gmail & 16-character App Password:
+                    </p>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 0.78rem;">Sender Gmail Address</label>
+                        <input type="email" id="quick-smtp-user" placeholder="yourname@gmail.com" style="padding: 6px 10px; font-size: 0.85rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="font-size: 0.78rem;">Gmail App Password</label>
+                        <input type="password" id="quick-smtp-pass" placeholder="16-character App Password" style="padding: 6px 10px; font-size: 0.85rem;">
+                    </div>
+                    <button id="save-quick-smtp-btn" class="btn btn-secondary btn-block" style="padding: 6px; font-size: 0.85rem;">Save Sender Credentials</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Verify OTP -->
+            <div id="step-otp" class="auth-step hidden">
+                <div class="form-group">
+                    <label for="otp-input">Enter 4-Digit Verification Code</label>
+                    <input type="text" id="otp-input" placeholder="1234" maxlength="4" style="text-align: center; letter-spacing: 6px; font-size: 1.4rem; font-weight: 700;" autocomplete="off">
+                </div>
+
+                <div class="timer-countdown-row" style="text-align: center; font-size: 0.88rem; color: #E03E27; font-weight: 600; margin-bottom: 12px;">
+                    ⏱️ Code expires in: <span id="countdown-timer">02:00</span>
+                </div>
+
+                <p class="inbox-notice" style="text-align: center; font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 14px;">
+                    📬 Please check your email inbox for your 4-digit login verification code.
+                </p>
+
+                <button id="verify-otp-btn" class="btn btn-primary btn-block">Verify & Sign In</button>
+                <button id="back-to-email-btn" class="btn btn-ghost btn-block">← Back to Email</button>
+            </div>
+
+            <div id="login-alert" class="alert hidden"></div>
+
+            <div class="login-footer">
+                <p>Powered by Ollama Offline AI Models, OCR & RAG Context</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sendOtpBtn = document.getElementById('send-otp-btn');
+            const verifyOtpBtn = document.getElementById('verify-otp-btn');
+            const backBtn = document.getElementById('back-to-email-btn');
+            const emailInput = document.getElementById('email-input');
+            const otpInput = document.getElementById('otp-input');
+            const stepEmail = document.getElementById('step-email');
+            const stepOtp = document.getElementById('step-otp');
+            const alertBox = document.getElementById('login-alert');
+            const timerDisplay = document.getElementById('countdown-timer');
+
+            let targetEmail = '';
+            let countdownInterval = null;
+
+            const toggleSmtpBox = document.getElementById('toggle-smtp-box');
+            const smtpSetupBox = document.getElementById('smtp-setup-box');
+            const saveQuickSmtpBtn = document.getElementById('save-quick-smtp-btn');
+            const quickSmtpUser = document.getElementById('quick-smtp-user');
+            const quickSmtpPass = document.getElementById('quick-smtp-pass');
+
+            if (toggleSmtpBox) {
+                toggleSmtpBox.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    smtpSetupBox.classList.toggle('hidden');
+                });
+            }
+
+            if (saveQuickSmtpBtn) {
+                saveQuickSmtpBtn.addEventListener('click', async () => {
+                    const user = quickSmtpUser.value.trim();
+                    const pass = quickSmtpPass.value.trim();
+
+                    if (!user || !pass) {
+                        showAlert('Enter both your Gmail address & App Password.', true);
+                        return;
+                    }
+
+                    saveQuickSmtpBtn.disabled = true;
+                    saveQuickSmtpBtn.textContent = 'Saving...';
+
+                    try {
+                        const res = await fetch('/api/auth/save-smtp', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ smtp_user: user, smtp_pass: pass })
+                        });
+                        const data = await res.json();
+
+                        if (res.ok && data.success) {
+                            showAlert('Sender Gmail saved! Now click Send OTP.');
+                            smtpSetupBox.classList.add('hidden');
+                        } else {
+                            showAlert(data.message || 'Error saving SMTP credentials', true);
+                        }
+                    } catch (e) {
+                        showAlert('Error saving SMTP settings', true);
+                    } finally {
+                        saveQuickSmtpBtn.disabled = false;
+                        saveQuickSmtpBtn.textContent = 'Save Sender Credentials';
+                    }
+                });
+            }
+
+            function showAlert(msg, isError = false) {
+                alertBox.textContent = msg;
+                alertBox.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+                alertBox.classList.remove('hidden');
+            }
+
+            function startTimer(durationSeconds) {
+                if (countdownInterval) clearInterval(countdownInterval);
+                let timer = durationSeconds;
+                
+                function updateDisplay() {
+                    const minutes = Math.floor(timer / 60);
+                    const seconds = timer % 60;
+                    timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    if (--timer < 0) {
+                        clearInterval(countdownInterval);
+                        timerDisplay.textContent = 'Expired';
+                        showAlert('OTP code has expired! Please request a new code.', true);
+                        verifyOtpBtn.disabled = true;
+                    }
+                }
+                updateDisplay();
+                countdownInterval = setInterval(updateDisplay, 1000);
+            }
+
+            sendOtpBtn.addEventListener('click', async () => {
+                targetEmail = emailInput.value.trim();
+                if (!targetEmail || !targetEmail.includes('@')) {
+                    showAlert('Please enter a valid email address.', true);
+                    return;
+                }
+
+                sendOtpBtn.disabled = true;
+                sendOtpBtn.textContent = 'Sending OTP...';
+
+                try {
+                    const res = await fetch('/api/auth/send-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: targetEmail })
+                    });
+                    const data = await res.json();
+                    
+                    if (res.ok && data.success) {
+                        stepEmail.classList.add('hidden');
+                        stepOtp.classList.remove('hidden');
+                        verifyOtpBtn.disabled = false;
+                        otpInput.value = '';
+                        otpInput.focus();
+                        
+                        showAlert(data.message || `Verification code sent to ${targetEmail}`);
+                        startTimer(data.expires_in || 120);
+                    } else {
+                        showAlert(data.message || 'Error sending OTP', true);
+                    }
+                } catch (e) {
+                    showAlert('Network error sending OTP', true);
+                } finally {
+                    sendOtpBtn.disabled = false;
+                    sendOtpBtn.textContent = 'Send OTP Code ➔';
+                }
+            });
+
+            verifyOtpBtn.addEventListener('click', async () => {
+                const code = otpInput.value.trim();
+                if (code.length !== 4) {
+                    showAlert('Please enter 4-digit OTP code.', true);
+                    return;
+                }
+
+                verifyOtpBtn.disabled = true;
+                verifyOtpBtn.textContent = 'Verifying...';
+
+                try {
+                    const res = await fetch('/api/auth/verify-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: targetEmail, code: code })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok && data.success) {
+                        if (countdownInterval) clearInterval(countdownInterval);
+                        showAlert('Signed in successfully! Redirecting...');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 800);
+                    } else {
+                        showAlert(data.message || 'Verification failed', true);
+                    }
+                } catch (e) {
+                    showAlert('Error verifying code', true);
+                } finally {
+                    verifyOtpBtn.disabled = false;
+                    verifyOtpBtn.textContent = 'Verify & Sign In';
+                }
+            });
+
+            backBtn.addEventListener('click', () => {
+                if (countdownInterval) clearInterval(countdownInterval);
+                stepOtp.classList.add('hidden');
+                stepEmail.classList.remove('hidden');
+                alertBox.classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

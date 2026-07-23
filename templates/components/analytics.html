@@ -1,0 +1,78 @@
+<!-- VIEW 7: ANALYTICS TAB -->
+<section id="tab-analytics" class="tab-content">
+    <div class="tab-page-header">
+        <h2>Analytics & Usage Metrics</h2>
+        <p class="tab-subtitle">Track your email productivity, daily and monthly usage trends, and estimated time savings.</p>
+    </div>
+
+    <div class="analytics-metrics-grid">
+        <div class="metric-card">
+            <span class="metric-value" id="stat-generated">0</span>
+            <span class="metric-label">Total Emails Generated</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-value" id="stat-time-saved">0 hrs</span>
+            <span class="metric-label">Estimated Time Saved</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-value" id="stat-saved">0</span>
+            <span class="metric-label">Saved Drafts</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-value" id="stat-tone">Formal</span>
+            <span class="metric-label">Most Used Tone</span>
+        </div>
+    </div>
+
+    <!-- Interactive Analytics Charts Grid -->
+    <div class="analytics-charts-grid">
+        <!-- Daily Usage Chart -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h3>📅 Daily Usage Trend</h3>
+                <span class="chart-badge">Last 7 Days</span>
+            </div>
+            <div class="chart-body">
+                <canvas id="dailyUsageChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Monthly Usage Chart -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h3>📊 Monthly Usage Overview</h3>
+                <span class="chart-badge">Yearly View</span>
+            </div>
+            <div class="chart-body">
+                <canvas id="monthlyUsageChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Time Management & Efficiency Chart -->
+        <div class="chart-card full-width">
+            <div class="chart-card-header">
+                <h3>⏱️ Time Management & Writing Efficiency</h3>
+                <span class="chart-badge">AI vs Manual Writing</span>
+            </div>
+            <div class="chart-body time-mgmt-wrapper">
+                <div class="chart-canvas-container">
+                    <canvas id="timeMgmtChart"></canvas>
+                </div>
+                <div class="time-mgmt-stats">
+                    <div class="time-stat-item">
+                        <span class="time-stat-number" id="avg-time-per-email">~30 sec</span>
+                        <span class="time-stat-title">Average Generation Time</span>
+                    </div>
+                    <div class="time-stat-item">
+                        <span class="time-stat-number" id="manual-saved-rate">~90%</span>
+                        <span class="time-stat-title">Efficiency Gain</span>
+                    </div>
+                    <div class="time-stat-item">
+                        <span class="time-stat-number" id="time-saved-min-tag">0 mins</span>
+                        <span class="time-stat-title">Total Productivity Recovered</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
