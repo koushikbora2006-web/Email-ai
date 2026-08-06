@@ -52,7 +52,7 @@ graph TD
     B -->|Sync Presets| API_Settings
 
     API_Auth -->|Write Sessions & Settings| SQLite
-    API_Auth -->|Background Dispatch Thread| SMTP[SMTP Server]
+    API_Auth -->|Background Dispatch Thread| Brevo[Brevo API]
     API_Auth -->|Sync Records| Mongo
 
     API_Gen --> Ollama
@@ -86,7 +86,7 @@ The project uses a curated set of lightweight and high-performance technologies 
 
 ### Backend & API Gateway
 *   **Framework**: Python `Flask` (v3.0.0+) managing session storage, static asset routing, and JSON REST API endpoints.
-*   **Task Handling**: Python `threading` library for asynchronous non-blocking task execution (e.g., fast SMTP email dispatch).
+*   **Task Handling**: Python `threading` library for asynchronous non-blocking task execution (e.g., fast Brevo API email dispatch).
 
 ### AI & NLP Services
 *   **Local LLM Service**: `Ollama` API (`/api/generate`) with automatic connection verification and customizable model configuration (defaulting to `llama3`).
@@ -102,11 +102,11 @@ The project uses a curated set of lightweight and high-performance technologies 
 
 ## 🔄 Core Workflows & Logic
 
-### 1. Verification & SMTP OTP Dispatch
+### 1. Verification & Brevo API OTP Dispatch
 1. The user inputs their email address on the Login screen.
 2. The server generates a random 4-digit code and calculates an expiration timestamp (+120 seconds).
 3. The code is saved to SQLite (`otp_codes` table) and mirrored to MongoDB (`otp_codes` collection).
-4. An **asynchronous worker thread** triggers a secure SMTP handshake (supporting STARTTLS or SSL) to send a professionally styled HTML verification card to the user's inbox:
+4. An **asynchronous worker thread** dispatches an HTTP POST request to Brevo REST API (`https://api.brevo.com/v3/smtp/email`) to send a professionally styled HTML verification card to the user's inbox:
    * **Bypass Code**: In developers' environments, the standard mock passcode `1234` can bypass the OTP checking stage for rapid debugging.
 
 ### 2. Dual-Mode Text Generation Engine
@@ -141,14 +141,14 @@ The project uses a curated set of lightweight and high-performance technologies 
     2. Registry system variables using the `winreg` library (checking user environment variables and local machine control environments).
     3. Explicit standard fallback paths (such as `C:\Program Files\Tesseract-OCR\tesseract.exe` or local ffmpeg directories).
 
-### ⏳ 3. Asynchronous SMTP Latency
-*   **Challenge**: Establishing a socket connection to `smtp.gmail.com:587`, resolving STARTTLS, performing user authorization, and passing HTML content blocks takes up to 4–6 seconds. Running this synchronously delays Flask's response cycle, freezing the user interface.
+### ⏳ 3. Asynchronous Brevo API Dispatch
+*   **Challenge**: Communicating with external transactional email APIs over HTTP can take a few seconds depending on network throughput. Running this synchronously delays Flask's response cycle, freezing the user interface.
 *   **Solution**: Implemented a daemonized threading wrapper:
     ```python
-    def send_async_email(recipient_email, otp_code, smtp_server, smtp_port, smtp_user, smtp_pass):
+    def send_async_email(recipient_email, otp_code, brevo_api_key=None, sender_email=None, sender_name=None):
         t = threading.Thread(
             target=send_real_email,
-            args=(recipient_email, otp_code, smtp_server, smtp_port, smtp_user, smtp_pass)
+            args=(recipient_email, otp_code, brevo_api_key, sender_email, sender_name)
         )
         t.daemon = True
         t.start()
@@ -194,5 +194,5 @@ The project uses a curated set of lightweight and high-performance technologies 
    [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ### Testing OTP Delivery
-* Configure your credentials (Gmail address & [App Password](https://myaccount.google.com/apppasswords)) under **Settings -> SMTP Preferences** to send verification codes to real inboxes.
+* Configure your credentials (Sender Email & Brevo API Key) under **Settings -> Brevo API Settings** to send verification codes to real inboxes.
 * Otherwise, type any email and sign in using the developer bypass code: **`1234`**.
