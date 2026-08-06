@@ -58,21 +58,23 @@ def login_page():
         return redirect(url_for('dashboard'))
     return render_template('login.html')
 
-# Helper: Send Real Email OTP to recipient inbox via SMTP (Thread-safe with TLS & SSL fallback)
+# Helper: Send Real Email OTP to recipient inbox via Brevo API
 import requests
 
-def send_real_email(recipient_email, otp_code, *args):
+def send_real_email(recipient_email, otp_code, brevo_api_key=None, sender_email=None, sender_name=None):
 
-    api_key = os.getenv("BREVO_API_KEY")
+    api_key = brevo_api_key or os.getenv("BREVO_API_KEY")
 
     print("BREVO KEY:", api_key[:15] if api_key else "NOT FOUND")
 
-    sender_email = os.getenv("SENDER_EMAIL")
+    sender_email = sender_email or os.getenv("SENDER_EMAIL") or os.getenv("BREVO_SENDER_EMAIL")
 
-    sender_name = os.getenv("SENDER_NAME", "email_ai")
+    sender_name = sender_name or os.getenv("SENDER_NAME", "email_ai")
 
     if not api_key:
         return False, "BREVO_API_KEY not configured."
+    if not sender_email:
+        return False, "SENDER_EMAIL not configured."
 
     url = "https://api.brevo.com/v3/smtp/email"
 
@@ -140,26 +142,26 @@ def send_real_email(recipient_email, otp_code, *args):
 
         if response.status_code in [200, 201, 202]:
 
-            print("OTP EMAIL SENT")
+            print("OTP EMAIL SENT VIA BREVO")
 
             return True, "OTP Sent"
 
-        print(response.text)
+        print("Brevo API Error:", response.text)
 
-        return False, response.text
+        return False, f"Brevo API Error: {response.text}"
 
     except Exception as e:
 
-        print(e)
+        print("Brevo Exception:", e)
 
         return False, str(e)
 
 # Async background email dispatcher for fast non-blocking delivery
 import threading
-def send_async_email(recipient_email, otp_code, smtp_server, smtp_port, smtp_user, smtp_pass):
+def send_async_email(recipient_email, otp_code, brevo_api_key=None, sender_email=None, sender_name=None):
     t = threading.Thread(
         target=send_real_email,
-        args=(recipient_email, otp_code, smtp_server, smtp_port, smtp_user, smtp_pass)
+        args=(recipient_email, otp_code, brevo_api_key, sender_email, sender_name)
     )
     t.daemon = True
     t.start()
@@ -191,20 +193,19 @@ def send_otp():
     # Sync OTP to MongoDB
     mongo_db.save_otp(email, otp_code, expires_at)
 
-    # Pre-fetch SMTP settings in main thread (thread-safe)
-    cursor.execute("SELECT smtp_server, smtp_port, smtp_user, smtp_pass FROM settings ORDER BY id ASC LIMIT 1")
+    # Pre-fetch Brevo settings in main thread
+    cursor.execute("SELECT brevo_api_key, sender_email, sender_name FROM settings ORDER BY id ASC LIMIT 1")
     s_row = cursor.fetchone()
     conn.close()
 
-    smtp_server = os.environ.get('SMTP_SERVER') or (s_row['smtp_server'] if s_row and 'smtp_server' in s_row.keys() and s_row['smtp_server'] else 'smtp.gmail.com')
-    smtp_port = int(os.environ.get('SMTP_PORT') or (s_row['smtp_port'] if s_row and 'smtp_port' in s_row.keys() and s_row['smtp_port'] else 587))
-    smtp_user = os.environ.get('SMTP_USER') or (s_row['smtp_user'] if s_row and 'smtp_user' in s_row.keys() and s_row['smtp_user'] else '')
-    smtp_pass = os.environ.get('SMTP_PASS') or (s_row['smtp_pass'] if s_row and 'smtp_pass' in s_row.keys() and s_row['smtp_pass'] else '')
+    brevo_api_key = os.environ.get('BREVO_API_KEY') or (s_row['brevo_api_key'] if s_row and 'brevo_api_key' in s_row.keys() and s_row['brevo_api_key'] else '')
+    sender_email = os.environ.get('SENDER_EMAIL') or (s_row['sender_email'] if s_row and 'sender_email' in s_row.keys() and s_row['sender_email'] else '')
+    sender_name = os.environ.get('SENDER_NAME') or (s_row['sender_name'] if s_row and 'sender_name' in s_row.keys() and s_row['sender_name'] else user_name or 'email_ai')
 
-    smtp_configured = bool(smtp_user and smtp_pass)
+    brevo_configured = bool(brevo_api_key and sender_email)
 
-    # Launch thread-safe background email dispatcher
-    success, message = send_real_email(email, otp_code)
+    # Launch Brevo email dispatcher
+    success, message = send_real_email(email, otp_code, brevo_api_key, sender_email, sender_name)
 
     if not success:
         return jsonify({
@@ -215,12 +216,12 @@ def send_otp():
         'success': True,
         'message': f'A 4-digit OTP verification code has been dispatched to {email}. Check your inbox.',
         'expires_in': 120,
-        'smtp_configured': smtp_configured,
+        'brevo_configured': brevo_configured,
         'mongo_connected': mongo_db.is_connected
     }
 
-    if not smtp_configured:
-        res_data['notice'] = 'To deliver OTPs directly to real email inboxes via Gmail SMTP, enter your Sender Gmail & App Password.'
+    if not brevo_configured:
+        res_data['notice'] = 'To deliver OTPs directly to real email inboxes via Brevo API, enter your Brevo API Key & Sender Email.'
 
     return jsonify(res_data)
 
@@ -228,95 +229,89 @@ def send_otp():
 def get_mongo_status():
     return jsonify(mongo_db.get_status())
 
+@app.route('/api/auth/test-brevo', methods=['POST'])
 @app.route('/api/auth/test-smtp', methods=['POST'])
-def test_smtp_connection():
+def test_brevo_connection():
     data = request.json or {}
     recipient = data.get('email', 'koushik@example.com').strip()
     
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT smtp_server, smtp_port, smtp_user, smtp_pass FROM settings ORDER BY id ASC LIMIT 1")
+    cursor.execute("SELECT brevo_api_key, sender_email, sender_name FROM settings ORDER BY id ASC LIMIT 1")
     s_row = cursor.fetchone()
     conn.close()
 
-    smtp_server = os.environ.get('SMTP_SERVER') or (s_row['smtp_server'] if s_row and 'smtp_server' in s_row.keys() and s_row['smtp_server'] else 'smtp.gmail.com')
-    smtp_port = int(os.environ.get('SMTP_PORT') or (s_row['smtp_port'] if s_row and 'smtp_port' in s_row.keys() and s_row['smtp_port'] else 587))
-    smtp_user = os.environ.get('SMTP_USER') or (s_row['smtp_user'] if s_row and 'smtp_user' in s_row.keys() and s_row['smtp_user'] else '')
-    smtp_pass = os.environ.get('SMTP_PASS') or (s_row['smtp_pass'] if s_row and 'smtp_pass' in s_row.keys() and s_row['smtp_pass'] else '')
+    brevo_api_key = data.get('brevo_api_key') or os.environ.get('BREVO_API_KEY') or (s_row['brevo_api_key'] if s_row and 'brevo_api_key' in s_row.keys() and s_row['brevo_api_key'] else '')
+    sender_email = data.get('sender_email') or os.environ.get('SENDER_EMAIL') or (s_row['sender_email'] if s_row and 'sender_email' in s_row.keys() and s_row['sender_email'] else '')
+    sender_name = data.get('sender_name') or os.environ.get('SENDER_NAME') or (s_row['sender_name'] if s_row and 'sender_name' in s_row.keys() and s_row['sender_name'] else 'email_ai')
 
-    success, message = send_real_email(recipient, "9999", smtp_server, smtp_port, smtp_user, smtp_pass)
+    success, message = send_real_email(recipient, "9999", brevo_api_key, sender_email, sender_name)
     
     return jsonify({
         'success': success,
         'message': message,
-        'smtp_user': smtp_user,
-        'smtp_server': smtp_server
+        'sender_email': sender_email,
+        'brevo_configured': bool(brevo_api_key)
     })
 
+@app.route('/api/auth/save-brevo', methods=['POST'])
 @app.route('/api/auth/save-smtp', methods=['POST'])
-def save_smtp_credentials():
+def save_brevo_credentials():
     data = request.json or {}
-    smtp_user = data.get('smtp_user', '').strip()
-    smtp_pass = data.get('smtp_pass', '').strip()
-    smtp_server = data.get('smtp_server', 'smtp.gmail.com').strip()
-    smtp_port = int(data.get('smtp_port', 587))
+    brevo_api_key = (data.get('brevo_api_key') or data.get('smtp_pass', '')).strip()
+    sender_email = (data.get('sender_email') or data.get('smtp_user', '')).strip()
+    sender_name = data.get('sender_name', 'email_ai').strip()
 
-    if not smtp_user or not smtp_pass:
-        return jsonify({'success': False, 'message': 'Sender Gmail address and App Password are required.'}), 400
+    if not brevo_api_key or not sender_email:
+        return jsonify({'success': False, 'message': 'Brevo API Key and Sender Email address are required.'}), 400
 
-    # Test SMTP credentials with Google before saving
+    # Test Brevo API credentials before saving
+    headers = {
+        "accept": "application/json",
+        "api-key": brevo_api_key
+    }
     try:
-        import smtplib
-        if int(smtp_port) == 465:
-            server = smtplib.SMTP_SSL(smtp_server, int(smtp_port), timeout=20)
-            server.set_debuglevel(1)
-        else:
-            server = smtplib.SMTP(smtp_server, int(smtp_port), timeout=20)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(smtp_user, smtp_pass)
-        server.quit()
+        resp = requests.get("https://api.brevo.com/v3/account", headers=headers, timeout=10)
+        if resp.status_code != 200:
+            err_msg = f"Brevo API Key validation failed ({resp.status_code}): {resp.text}"
+            print(f"\n[BREVO TEST FAILED]: {err_msg}\n")
+            return jsonify({'success': False, 'message': err_msg}), 400
     except Exception as e:
-        err_str = str(e)
-        if '535' in err_str or 'BadCredentials' in err_str:
-            err_msg = "Google rejected credentials. Please use a 16-character Gmail App Password (generated at https://myaccount.google.com/apppasswords) with 2-Step Verification enabled."
-        else:
-            err_msg = f"SMTP Connection Failed: {err_str}"
-        print(f"\n[SMTP TEST FAILED]: {err_msg}\n")
+        err_msg = f"Brevo API Connection Failed: {str(e)}"
+        print(f"\n[BREVO TEST FAILED]: {err_msg}\n")
         return jsonify({'success': False, 'message': err_msg}), 400
 
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO settings (user_email, smtp_server, smtp_port, smtp_user, smtp_pass)
-        VALUES ('koushik@example.com', ?, ?, ?, ?)
+        INSERT INTO settings (user_email, brevo_api_key, sender_email, sender_name)
+        VALUES ('koushik@example.com', ?, ?, ?)
         ON CONFLICT(user_email) DO UPDATE SET
-            smtp_server=excluded.smtp_server,
-            smtp_port=excluded.smtp_port,
-            smtp_user=excluded.smtp_user,
-            smtp_pass=excluded.smtp_pass
-    ''', (smtp_server, smtp_port, smtp_user, smtp_pass))
+            brevo_api_key=excluded.brevo_api_key,
+            sender_email=excluded.sender_email,
+            sender_name=excluded.sender_name
+    ''', (brevo_api_key, sender_email, sender_name))
     conn.commit()
     conn.close()
 
-    print(f"\n[SMTP VERIFIED & SAVED]: Configured Sender Gmail '{smtp_user}' for live inbox OTP delivery.\n")
-    return jsonify({'success': True, 'message': f'✅ Gmail Sender ({smtp_user}) verified! All OTPs will now deliver directly to inboxes.'})
+    print(f"\n[BREVO VERIFIED & SAVED]: Configured Sender '{sender_email}' for live inbox OTP delivery.\n")
+    return jsonify({'success': True, 'message': f'✅ Brevo API Key & Sender ({sender_email}) verified! All OTPs will now deliver directly to inboxes.'})
 
+@app.route('/api/auth/brevo-status', methods=['GET'])
 @app.route('/api/auth/smtp-status', methods=['GET'])
-def get_smtp_status():
+def get_brevo_status():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT smtp_user, smtp_pass FROM settings ORDER BY id ASC LIMIT 1")
+    cursor.execute("SELECT brevo_api_key, sender_email FROM settings ORDER BY id ASC LIMIT 1")
     row = cursor.fetchone()
     conn.close()
 
-    has_env = bool(os.environ.get('SMTP_USER') and os.environ.get('SMTP_PASS'))
-    has_db = bool(row and row['smtp_user'] and row['smtp_pass'])
+    has_env = bool(os.environ.get('BREVO_API_KEY') and os.environ.get('SENDER_EMAIL'))
+    has_db = bool(row and row.get('brevo_api_key') and row.get('sender_email'))
     
     return jsonify({
         'configured': has_env or has_db,
-        'sender_email': os.environ.get('SMTP_USER') or (row['smtp_user'] if row else '')
+        'sender_email': os.environ.get('SENDER_EMAIL') or (row['sender_email'] if row and 'sender_email' in row.keys() else '')
     })
 
 @app.route('/api/auth/verify-otp', methods=['POST'])
@@ -409,15 +404,12 @@ def handle_ollama_settings():
         receiver_name = data.get('receiver_name', 'Manager / Recipient').strip()
         receiver_email = data.get('receiver_email', 'recipient@example.com').strip()
         
-        smtp_server = data.get('smtp_server', 'smtp.gmail.com').strip()
-        smtp_port = int(data.get('smtp_port', 587))
-        smtp_user = data.get('smtp_user', '').strip()
-        smtp_pass = data.get('smtp_pass', '').strip()
+        brevo_api_key = data.get('brevo_api_key', '').strip()
         profile_picture = data.get('profile_picture', '').strip()
 
         cursor.execute('''
-            INSERT INTO settings (user_email, ollama_url, default_model, sender_name, sender_email, receiver_name, receiver_email, smtp_server, smtp_port, smtp_user, smtp_pass, profile_picture)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO settings (user_email, ollama_url, default_model, sender_name, sender_email, receiver_name, receiver_email, brevo_api_key, profile_picture)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(user_email) DO UPDATE SET
                 ollama_url=excluded.ollama_url,
                 default_model=excluded.default_model,
@@ -425,12 +417,9 @@ def handle_ollama_settings():
                 sender_email=excluded.sender_email,
                 receiver_name=excluded.receiver_name,
                 receiver_email=excluded.receiver_email,
-                smtp_server=excluded.smtp_server,
-                smtp_port=excluded.smtp_port,
-                smtp_user=excluded.smtp_user,
-                smtp_pass=excluded.smtp_pass,
+                brevo_api_key=CASE WHEN excluded.brevo_api_key <> '' THEN excluded.brevo_api_key ELSE settings.brevo_api_key END,
                 profile_picture=CASE WHEN excluded.profile_picture <> '' THEN excluded.profile_picture ELSE settings.profile_picture END
-        ''', (user_email, ollama_url, default_model, sender_name, sender_email, receiver_name, receiver_email, smtp_server, smtp_port, smtp_user, smtp_pass, profile_picture))
+        ''', (user_email, ollama_url, default_model, sender_name, sender_email, receiver_name, receiver_email, brevo_api_key, profile_picture))
         conn.commit()
         conn.close()
 
@@ -449,6 +438,10 @@ def handle_ollama_settings():
                 res['sender_name'] = user_email.split('@')[0].capitalize()
             if (res.get('sender_email') == 'koushik@example.com' or not res.get('sender_email')) and user_email != 'koushik@example.com':
                 res['sender_email'] = user_email
+            res.pop('smtp_server', None)
+            res.pop('smtp_port', None)
+            res.pop('smtp_user', None)
+            res.pop('smtp_pass', None)
             return jsonify(res)
         
         fallback_name = user_email.split('@')[0].capitalize() if user_email != 'koushik@example.com' else 'Koushik'
@@ -459,10 +452,7 @@ def handle_ollama_settings():
             'sender_email': user_email,
             'receiver_name': 'Manager / Recipient',
             'receiver_email': 'recipient@example.com',
-            'smtp_server': 'smtp.gmail.com',
-            'smtp_port': 587,
-            'smtp_user': '',
-            'smtp_pass': '',
+            'brevo_api_key': os.getenv('BREVO_API_KEY', ''),
             'profile_picture': ''
         })
 
