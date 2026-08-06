@@ -1,8 +1,11 @@
 import time
 from pymongo import MongoClient, errors
+from dotenv import load_dotenv
 
-MONGO_URI = "mongodb://localhost:27017/"
-DB_NAME = "email_ai_db"
+load_dotenv()
+
+MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME = os.getenv("DB_NAME")
 
 class MongoDatabase:
     def __init__(self, uri=MONGO_URI, db_name=DB_NAME):
