@@ -205,7 +205,7 @@ class OCRService:
             topic = "General Business Update & Product Meeting"
             transcript = (
                 "Okay team, let's look at the agenda for today. We need to finalize the draft for our upcoming product "
-                "announcement. The main points are to highlight the AI capability and ensure the SMTP integration "
+                "announcement. The main points are to highlight the AI capability and ensure the Brevo API integration "
                 "is working for verifying user accounts. Let's aim to roll this out by Friday."
             )
             
