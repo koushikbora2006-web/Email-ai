@@ -59,138 +59,98 @@ def login_page():
     return render_template('login.html')
 
 # Helper: Send Real Email OTP to recipient inbox via SMTP (Thread-safe with TLS & SSL fallback)
-def send_real_email(recipient_email, otp_code, smtp_server, smtp_port, smtp_user, smtp_pass):
-    import smtplib
-    import socket
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
+import requests
 
-    if not smtp_user or not smtp_pass:
-        return False, "SMTP credentials are missing."
+def send_real_email(recipient_email, otp_code, *args):
+
+    api_key = os.getenv("BREVO_API_KEY")
+
+    sender_email = os.getenv("SENDER_EMAIL")
+
+    sender_name = os.getenv("SENDER_NAME", "email_ai")
+
+    if not api_key:
+        return False, "BREVO_API_KEY not configured."
+
+    url = "https://api.brevo.com/v3/smtp/email"
+
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "content-type": "application/json"
+    }
+
+    html = f"""
+    <html>
+    <body>
+
+    <h2>Email Writer AI</h2>
+
+    <p>Your OTP is:</p>
+
+    <h1 style="color:#ff4d36;">{otp_code}</h1>
+
+    <p>This code expires in 2 minutes.</p>
+
+    </body>
+    </html>
+    """
+
+    payload = {
+
+        "sender": {
+
+            "name": sender_name,
+
+            "email": sender_email
+
+        },
+
+        "to": [
+
+            {
+
+                "email": recipient_email
+
+            }
+
+        ],
+
+        "subject": f"{otp_code} is your Email Writer AI Verification Code",
+
+        "htmlContent": html
+
+    }
 
     try:
-        print("=" * 60)
-        print("SMTP DEBUG")
-        print(f"SMTP Server : {smtp_server}")
-        print(f"SMTP Port   : {smtp_port}")
-        print(f"SMTP User   : {smtp_user}")
-        print(f"Recipient   : {recipient_email}")
-        print("=" * 60)
 
-        msg = MIMEMultipart("alternative")
-        msg["From"] = f"Email Writer AI <{smtp_user}>"
-        msg["To"] = recipient_email
-        msg["Subject"] = f"{otp_code} is your Email Writer AI Verification Code"
+        response = requests.post(
 
-        text = f"""
-Hello,
+            url,
 
-Your verification code is:
+            headers=headers,
 
-{otp_code}
+            json=payload,
 
-This code expires in 2 minutes.
+            timeout=20
 
-Regards,
-Email Writer AI
-"""
-
-        html = f"""
-<html>
-<body style="font-family:Arial;">
-<h2>Email Writer AI</h2>
-
-<p>Your verification code is:</p>
-
-<h1 style="color:#ff4d36;">{otp_code}</h1>
-
-<p>This code expires in 2 minutes.</p>
-
-</body>
-</html>
-"""
-
-        msg.attach(MIMEText(text, "plain"))
-        msg.attach(MIMEText(html, "html"))
-
-        smtp_port = int(smtp_port)
-
-        # Gmail SSL
-        if smtp_port == 465:
-
-            server = smtplib.SMTP_SSL(
-                smtp_server,
-                smtp_port,
-                timeout=30
-            )
-
-            server.set_debuglevel(1)
-
-        else:
-
-            server = smtplib.SMTP(
-                smtp_server,
-                smtp_port,
-                timeout=30
-            )
-
-            server.set_debuglevel(1)
-
-            server.ehlo()
-
-            server.starttls()
-
-            server.ehlo()
-
-        print("Logging into SMTP...")
-
-        server.login(smtp_user, smtp_pass)
-
-        print("Login successful.")
-
-        server.sendmail(
-            smtp_user,
-            recipient_email,
-            msg.as_string()
         )
 
-        print("Email sent successfully.")
+        if response.status_code in [200, 201, 202]:
 
-        server.quit()
+            print("OTP EMAIL SENT")
 
-        return True, "OTP sent successfully."
+            return True, "OTP Sent"
 
-    except smtplib.SMTPAuthenticationError:
-        traceback.print_exc()
-        return False, (
-            "SMTP Authentication Failed.\n"
-            "Use a Gmail App Password instead of your Gmail password."
-        )
+        print(response.text)
 
-    except smtplib.SMTPConnectError as e:
-        traceback.print_exc()
-        return False, f"SMTP Connect Error: {e}"
-
-    except socket.gaierror:
-        traceback.print_exc()
-        return False, (
-            "Cannot resolve SMTP server.\n"
-            "Check SMTP_SERVER."
-        )
-
-    except TimeoutError:
-        traceback.print_exc()
-        return False, (
-            "SMTP connection timed out."
-        )
-
-    except OSError as e:
-        traceback.print_exc()
-        return False, f"Network Error: {e}"
+        return False, response.text
 
     except Exception as e:
-        traceback.print_exc()
-        return False, f"Unexpected Error: {repr(e)}"
+
+        print(e)
+
+        return False, str(e)
 
 # Async background email dispatcher for fast non-blocking delivery
 import threading
