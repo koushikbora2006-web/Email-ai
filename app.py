@@ -106,18 +106,25 @@ def send_real_email(recipient_email, otp_code, smtp_server, smtp_port, smtp_user
 
         # Support both Port 587 (STARTTLS) and Port 465 (SSL)
         if int(smtp_port) == 465:
-            server = smtplib.SMTP_SSL(smtp_server, int(smtp_port), timeout=12)
+            server = smtplib.SMTP_SSL(smtp_server, int(smtp_port), timeout=20)
+            server.set_debuglevel(1)
         else:
-            server = smtplib.SMTP(smtp_server, int(smtp_port), timeout=12)
+            server = smtplib.SMTP(smtp_server, int(smtp_port), timeout=20)
+            server.set_debuglevel(1)
+            server.ehlo()
             server.starttls()
+            server.ehlo()
 
         server.login(smtp_user, smtp_pass)
         server.send_message(msg)
         server.quit()
         print(f"\n[FAST SMTP DISPATCH SUCCESS]: Delivered 4-digit OTP {otp_code} directly to Gmail inbox: {recipient_email}\n")
         return True, "Delivered successfully"
+    import traceback
+
     except Exception as e:
-        err_msg = str(e)
+        traceback.print_exc()
+        return False, repr(e)
         print(f"\n[SMTP DISPATCH ERROR]: Could not deliver email to {recipient_email}: {err_msg}\n")
         return False, err_msg
 
@@ -230,11 +237,14 @@ def save_smtp_credentials():
     try:
         import smtplib
         if int(smtp_port) == 465:
-            server = smtplib.SMTP_SSL(smtp_server, int(smtp_port), timeout=8)
+            server = smtplib.SMTP_SSL(smtp_server, int(smtp_port), timeout=20)
+            server.set_debuglevel(1)
         else:
-            server = smtplib.SMTP(smtp_server, int(smtp_port), timeout=8)
+            server = smtplib.SMTP(smtp_server, int(smtp_port), timeout=20)
+            server.ehlo()
             server.starttls()
-        server.login(smtp_user, smtp_pass)
+            server.ehlo()
+            server.login(smtp_user, smtp_pass)
         server.quit()
     except Exception as e:
         err_str = str(e)
