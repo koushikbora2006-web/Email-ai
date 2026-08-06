@@ -31,24 +31,24 @@
 
                 <button id="send-otp-btn" class="btn btn-primary btn-block">Send OTP Code ➔</button>
 
-                <!-- Quick SMTP Setup Toggle for Real Inbox Delivery -->
-                <div class="smtp-quick-toggle" style="margin-top: 16px; text-align: center;">
-                    <a href="#" id="toggle-smtp-box" style="font-size: 0.82rem; color: var(--primary-coral); text-decoration: none; font-weight: 600;">⚙️ Configure Sender Gmail for Live Inbox Delivery</a>
+                <!-- Quick Brevo API Setup Toggle for Real Inbox Delivery -->
+                <div class="brevo-quick-toggle" style="margin-top: 16px; text-align: center;">
+                    <a href="#" id="toggle-brevo-box" style="font-size: 0.82rem; color: var(--primary-coral); text-decoration: none; font-weight: 600;">⚙️ Configure Brevo API for Live Inbox Delivery</a>
                 </div>
 
-                <div id="smtp-setup-box" class="smtp-setup-box hidden" style="margin-top: 14px; background: #F8FAFC; border: 1px solid var(--border-color); padding: 14px; border-radius: var(--radius-md); text-align: left;">
+                <div id="brevo-setup-box" class="brevo-setup-box hidden" style="margin-top: 14px; background: #F8FAFC; border: 1px solid var(--border-color); padding: 14px; border-radius: var(--radius-md); text-align: left;">
                     <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px; font-weight: 500;">
-                        To deliver 4-digit OTPs directly to recipient Gmail inboxes, enter your Sender Gmail & 16-character App Password:
+                        To deliver 4-digit OTPs directly to recipient inboxes via Brevo API, enter your Sender Email & Brevo API Key:
                     </p>
                     <div class="form-group" style="margin-bottom: 8px;">
-                        <label style="font-size: 0.78rem;">Sender Gmail Address</label>
-                        <input type="email" id="quick-smtp-user" placeholder="yourname@gmail.com" style="padding: 6px 10px; font-size: 0.85rem;">
+                        <label style="font-size: 0.78rem;">Sender Email Address</label>
+                        <input type="email" id="quick-brevo-user" placeholder="yourname@example.com" style="padding: 6px 10px; font-size: 0.85rem;">
                     </div>
                     <div class="form-group" style="margin-bottom: 10px;">
-                        <label style="font-size: 0.78rem;">Gmail App Password</label>
-                        <input type="password" id="quick-smtp-pass" placeholder="16-character App Password" style="padding: 6px 10px; font-size: 0.85rem;">
+                        <label style="font-size: 0.78rem;">Brevo API Key (xkeysib-...)</label>
+                        <input type="password" id="quick-brevo-key" placeholder="xkeysib-..." style="padding: 6px 10px; font-size: 0.85rem;">
                     </div>
-                    <button id="save-quick-smtp-btn" class="btn btn-secondary btn-block" style="padding: 6px; font-size: 0.85rem;">Save Sender Credentials</button>
+                    <button id="save-quick-brevo-btn" class="btn btn-secondary btn-block" style="padding: 6px; font-size: 0.85rem;">Save Brevo API Key</button>
                 </div>
             </div>
 
@@ -94,51 +94,51 @@
             let targetEmail = '';
             let countdownInterval = null;
 
-            const toggleSmtpBox = document.getElementById('toggle-smtp-box');
-            const smtpSetupBox = document.getElementById('smtp-setup-box');
-            const saveQuickSmtpBtn = document.getElementById('save-quick-smtp-btn');
-            const quickSmtpUser = document.getElementById('quick-smtp-user');
-            const quickSmtpPass = document.getElementById('quick-smtp-pass');
+            const toggleBrevoBox = document.getElementById('toggle-brevo-box');
+            const brevoSetupBox = document.getElementById('brevo-setup-box');
+            const saveQuickBrevoBtn = document.getElementById('save-quick-brevo-btn');
+            const quickBrevoUser = document.getElementById('quick-brevo-user');
+            const quickBrevoKey = document.getElementById('quick-brevo-key');
 
-            if (toggleSmtpBox) {
-                toggleSmtpBox.addEventListener('click', (e) => {
+            if (toggleBrevoBox) {
+                toggleBrevoBox.addEventListener('click', (e) => {
                     e.preventDefault();
-                    smtpSetupBox.classList.toggle('hidden');
+                    brevoSetupBox.classList.toggle('hidden');
                 });
             }
 
-            if (saveQuickSmtpBtn) {
-                saveQuickSmtpBtn.addEventListener('click', async () => {
-                    const user = quickSmtpUser.value.trim();
-                    const pass = quickSmtpPass.value.trim();
+            if (saveQuickBrevoBtn) {
+                saveQuickBrevoBtn.addEventListener('click', async () => {
+                    const email = quickBrevoUser.value.trim();
+                    const apiKey = quickBrevoKey.value.trim();
 
-                    if (!user || !pass) {
-                        showAlert('Enter both your Gmail address & App Password.', true);
+                    if (!email || !apiKey) {
+                        showAlert('Enter both your Sender Email address & Brevo API Key.', true);
                         return;
                     }
 
-                    saveQuickSmtpBtn.disabled = true;
-                    saveQuickSmtpBtn.textContent = 'Saving...';
+                    saveQuickBrevoBtn.disabled = true;
+                    saveQuickBrevoBtn.textContent = 'Saving...';
 
                     try {
-                        const res = await fetch('/api/auth/save-smtp', {
+                        const res = await fetch('/api/auth/save-brevo', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ smtp_user: user, smtp_pass: pass })
+                            body: JSON.stringify({ sender_email: email, brevo_api_key: apiKey })
                         });
                         const data = await res.json();
 
                         if (res.ok && data.success) {
-                            showAlert('Sender Gmail saved! Now click Send OTP.');
-                            smtpSetupBox.classList.add('hidden');
+                            showAlert(data.message || 'Brevo API Key saved! Now click Send OTP.');
+                            brevoSetupBox.classList.add('hidden');
                         } else {
-                            showAlert(data.message || 'Error saving SMTP credentials', true);
+                            showAlert(data.message || 'Error saving Brevo API credentials', true);
                         }
                     } catch (e) {
-                        showAlert('Error saving SMTP settings', true);
+                        showAlert('Error saving Brevo API settings', true);
                     } finally {
-                        saveQuickSmtpBtn.disabled = false;
-                        saveQuickSmtpBtn.textContent = 'Save Sender Credentials';
+                        saveQuickBrevoBtn.disabled = false;
+                        saveQuickBrevoBtn.textContent = 'Save Brevo API Key';
                     }
                 });
             }
