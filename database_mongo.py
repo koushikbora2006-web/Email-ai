@@ -1,3 +1,4 @@
+import os
 import time
 from pymongo import MongoClient, errors
 from dotenv import load_dotenv
