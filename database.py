@@ -101,7 +101,7 @@ def init_db():
             smtp_server TEXT DEFAULT 'smtp.gmail.com',
             smtp_port INTEGER DEFAULT 587,
             smtp_user TEXT DEFAULT '',
-            smtp_pass TEXT DEFAULT '',
+            brevo_api_key TEXT DEFAULT '',
             default_signature TEXT DEFAULT 'Best regards,\nKoushik'
         )
     ''')
@@ -113,14 +113,8 @@ def init_db():
         cursor.execute("ALTER TABLE settings ADD COLUMN receiver_name TEXT DEFAULT 'Manager / Recipient'")
     if 'receiver_email' not in columns:
         cursor.execute("ALTER TABLE settings ADD COLUMN receiver_email TEXT DEFAULT 'recipient@example.com'")
-    if 'smtp_server' not in columns:
-        cursor.execute("ALTER TABLE settings ADD COLUMN smtp_server TEXT DEFAULT 'smtp.gmail.com'")
-    if 'smtp_port' not in columns:
-        cursor.execute("ALTER TABLE settings ADD COLUMN smtp_port INTEGER DEFAULT 587")
-    if 'smtp_user' not in columns:
-        cursor.execute("ALTER TABLE settings ADD COLUMN smtp_user TEXT DEFAULT ''")
-    if 'smtp_pass' not in columns:
-        cursor.execute("ALTER TABLE settings ADD COLUMN smtp_pass TEXT DEFAULT ''")
+    if 'brevo_api_key' not in columns:
+        cursor.execute("ALTER TABLE settings ADD COLUMN brevo_api_key TEXT DEFAULT ''")
     if 'profile_picture' not in columns:
         cursor.execute("ALTER TABLE settings ADD COLUMN profile_picture TEXT DEFAULT ''")
 
