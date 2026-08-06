@@ -918,12 +918,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const receiverEmail = document.getElementById('receiver-email-input').value.trim();
             const defaultSignature = document.getElementById('signature-input').value;
             
-            const smtpServer = document.getElementById('smtp-server-input').value.trim();
-            const smtpPort = document.getElementById('smtp-port-input').value.trim();
-            const smtpUser = document.getElementById('smtp-user-input').value.trim();
-            const smtpPass = document.getElementById('smtp-pass-input').value.trim();
-            
-            const defaultTone = document.getElementById('setting-default-tone').value;
+            const brevoApiKeyElem = document.getElementById('brevo-api-key-input');
+            const brevoApiKey = brevoApiKeyElem ? brevoApiKeyElem.value.trim() : '';
 
             showToast('Saving settings...');
 
@@ -938,10 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         sender_email: senderEmail,
                         receiver_name: receiverName,
                         receiver_email: receiverEmail,
-                        smtp_server: smtpServer,
-                        smtp_port: smtpPort,
-                        smtp_user: smtpUser,
-                        smtp_pass: smtpPass
+                        brevo_api_key: brevoApiKey
                     })
                 });
                 
@@ -993,10 +986,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.ollama_url) document.getElementById('ollama-url-input').value = data.ollama_url;
             if (data.default_model) document.getElementById('model-select-dropdown').value = data.default_model;
             
-            if (data.smtp_server) document.getElementById('smtp-server-input').value = data.smtp_server;
-            if (data.smtp_port) document.getElementById('smtp-port-input').value = data.smtp_port;
-            if (data.smtp_user) document.getElementById('smtp-user-input').value = data.smtp_user;
-            if (data.smtp_pass) document.getElementById('smtp-pass-input').value = data.smtp_pass;
+            const brevoApiKeyElem = document.getElementById('brevo-api-key-input');
+            if (brevoApiKeyElem && data.brevo_api_key) brevoApiKeyElem.value = data.brevo_api_key;
             
             // Set dynamic preview images on load
             const cacheBustedUrl = `/api/user/profile-pic?t=${new Date().getTime()}`;
