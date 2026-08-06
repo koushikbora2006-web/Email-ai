@@ -202,8 +202,13 @@ def send_otp():
     smtp_configured = bool(smtp_user and smtp_pass)
 
     # Launch thread-safe background email dispatcher
-    send_async_email(email, otp_code, smtp_server, smtp_port, smtp_user, smtp_pass)
+    success, message = send_real_email(email, otp_code)
 
+    if not success:
+        return jsonify({
+            "success": False,
+            "message": message
+        }), 500
     res_data = {
         'success': True,
         'message': f'A 4-digit OTP verification code has been dispatched to {email}. Check your inbox.',
