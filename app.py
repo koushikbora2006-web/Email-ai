@@ -65,6 +65,8 @@ def send_real_email(recipient_email, otp_code, *args):
 
     api_key = os.getenv("BREVO_API_KEY")
 
+    print("BREVO KEY:", api_key[:15] if api_key else "NOT FOUND")
+
     sender_email = os.getenv("SENDER_EMAIL")
 
     sender_name = os.getenv("SENDER_NAME", "email_ai")
