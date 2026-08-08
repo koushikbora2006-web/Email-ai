@@ -1,35 +1,45 @@
 <!-- Left Sidebar Navigation -->
 <aside class="app-sidebar" id="app-sidebar">
-    <button class="btn-new-email" id="btn-new-email-action">
+    <div class="sidebar-header">
+        <span class="sidebar-title">Menu</span>
+        <button class="sidebar-close-btn" id="sidebar-close-btn" title="Close Sidebar" aria-label="Close Sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <button class="btn-new-email" id="btn-new-email-action" title="New Email">
         <span class="plus-icon">+</span> <span class="btn-text">New Email</span>
     </button>
 
     <nav class="sidebar-menu">
-        <a href="#" class="menu-item active" data-tab="tab-dashboard">
+        <a href="#" class="menu-item active" data-tab="tab-dashboard" title="Dashboard">
             <span class="menu-icon">🏠</span> <span class="menu-text">Dashboard</span>
         </a>
-        <a href="#" class="menu-item" data-tab="tab-history">
+        <a href="#" class="menu-item" data-tab="tab-history" title="Chat History">
             <span class="menu-icon">💬</span> <span class="menu-text">Chat History</span>
         </a>
-        <a href="#" class="menu-item" data-tab="tab-saved">
+        <a href="#" class="menu-item" data-tab="tab-saved" title="Saved Emails">
             <span class="menu-icon">📁</span> <span class="menu-text">Saved Emails</span>
         </a>
-        <a href="#" class="menu-item" data-tab="tab-templates">
+        <a href="#" class="menu-item" data-tab="tab-templates" title="Templates">
             <span class="menu-icon">📄</span> <span class="menu-text">Templates</span>
         </a>
-        <a href="#" class="menu-item" data-tab="tab-rag">
+        <a href="#" class="menu-item" data-tab="tab-rag" title="Knowledge Base">
             <span class="menu-icon">🧠</span> <span class="menu-text">Knowledge Base</span>
         </a>
 
-        <a href="#" class="menu-item" data-tab="tab-analytics">
+        <a href="#" class="menu-item" data-tab="tab-analytics" title="Analytics">
             <span class="menu-icon">📊</span> <span class="menu-text">Analytics</span>
         </a>
-        <a href="#" class="menu-item" data-tab="tab-settings">
+        <a href="#" class="menu-item" data-tab="tab-settings" title="Settings">
             <span class="menu-icon">⚙️</span> <span class="menu-text">Settings</span>
         </a>
     </nav>
 
-    <div class="sidebar-status-card" id="ollama-status-badge">
+    <div class="sidebar-status-card" id="ollama-status-badge" title="AI Model Status">
         <div class="status-indicator online" id="status-dot"></div>
         <div class="status-text">
             <strong id="status-model-name">Llama3 / Ollama</strong>
