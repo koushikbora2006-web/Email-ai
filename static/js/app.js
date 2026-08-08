@@ -16,10 +16,68 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabContents = document.querySelectorAll('.tab-content');
     const btnNewEmail = document.getElementById('btn-new-email-action');
 
-    // UI Elements - Mobile Sidebar Responsive Selectors
+    // UI Elements - Sidebar Selectors
     const appSidebar = document.getElementById('app-sidebar');
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-    // UI Elements - Generator Dashboard
+    // Restore saved sidebar state from localStorage for desktop view
+    const savedSidebarState = localStorage.getItem('sidebar_collapsed');
+    if (savedSidebarState === 'true' && window.innerWidth > 768) {
+        appSidebar.classList.add('collapsed');
+    }
+
+    function openMobileSidebar() {
+        if (appSidebar) appSidebar.classList.add('mobile-open');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('hidden');
+    }
+
+    function closeMobileSidebar() {
+        if (appSidebar) appSidebar.classList.remove('mobile-open');
+        if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+    }
+
+    function toggleSidebar() {
+        if (window.innerWidth <= 768) {
+            const isOpen = appSidebar.classList.contains('mobile-open');
+            if (isOpen) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        } else {
+            const isCollapsed = appSidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false');
+        }
+    }
+
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSidebar();
+        });
+    }
+
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (window.innerWidth <= 768) {
+                closeMobileSidebar();
+            } else {
+                appSidebar.classList.add('collapsed');
+                localStorage.setItem('sidebar_collapsed', 'true');
+            }
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            closeMobileSidebar();
+        });
+    }
+
+    // --- Generator Dashboard ---
     const promptInput = document.getElementById('prompt-input');
     const btnGenerate = document.getElementById('btn-generate-email');
     const btnClearChat = document.getElementById('btn-clear-chat');
@@ -91,6 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const tabId = item.dataset.tab;
             if (tabId) switchTab(tabId);
+            if (window.innerWidth <= 768) {
+                closeMobileSidebar();
+            }
         });
     });
 
@@ -98,6 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
         switchTab('tab-dashboard');
         promptInput.value = '';
         promptInput.focus();
+        if (window.innerWidth <= 768) {
+            closeMobileSidebar();
+        }
     });
 
     // --- Ollama Connection Check & Models ---
